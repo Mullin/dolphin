@@ -26,9 +26,9 @@ u32 Timer::GetTimeMs()
 #ifdef _WIN32
 	return timeGetTime();
 #else
-	struct timeval t;
-	(void)gettimeofday(&t, nullptr);
-	return ((u32)(t.tv_sec * 1000 + t.tv_usec / 1000));
+	struct timespec t;
+	(void)clock_gettime(CLOCK_MONOTONIC, &t);
+	return ((u32)(t.tv_sec * 1000 + t.tv_nsec / 1000000));
 #endif
 }
 
@@ -49,9 +49,9 @@ u64 Timer::GetTimeUs()
 	QueryPerformanceCounter(&time);
 	return u64(double(time.QuadPart) * freq);
 #else
-	struct timeval t;
-	(void)gettimeofday(&t, nullptr);
-	return ((u64)(t.tv_sec * 1000000 + t.tv_usec));
+	struct timespec t;
+	(void)clock_gettime(CLOCK_MONOTONIC, &t);
+	return ((u64)(t.tv_sec * 1000000 + (t.tv_nsec / 1000)));
 #endif
 }
 
@@ -206,9 +206,9 @@ std::string Timer::GetTimeFormatted()
 	(void)::ftime(&tp);
 	return StringFromFormat("%s:%03i", tmp, tp.millitm);
 #else
-	struct timeval t;
-	(void)gettimeofday(&t, nullptr);
-	return StringFromFormat("%s:%03d", tmp, (int)(t.tv_usec / 1000));
+	struct timespec t;
+	(void)clock_gettime(CLOCK_MONOTONIC, &t);
+	return StringFromFormat("%s:%03d", tmp, (int)(t.tv_nsec / 1000000));
 #endif
 }
 
@@ -220,8 +220,8 @@ double Timer::GetDoubleTime()
 	struct timeb tp;
 	(void)::ftime(&tp);
 #else
-	struct timeval t;
-	(void)gettimeofday(&t, nullptr);
+	struct timespec t;
+	(void)clock_gettime(CLOCK_MONOTONIC, &t);
 #endif
 	// Get continuous timestamp
 	u64 TmpSeconds = Common::Timer::GetTimeSinceJan1970();
@@ -237,7 +237,7 @@ double Timer::GetDoubleTime()
 #ifdef _WIN32
 	double ms = tp.millitm / 1000.0 / 1000.0;
 #else
-	double ms = t.tv_usec / 1000000.0;
+	double ms = t.tv_nsec / 1000000000.0;
 #endif
 	double TmpTime = Seconds + ms;
 
